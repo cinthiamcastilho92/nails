@@ -120,6 +120,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-background text-foreground;
@@ -128,3 +129,88 @@
     @apply font-sans;
   }
 }
+
+/* ── Design tokens ── */
+:root {
+  --dark-base:    #080810;
+  --dark-surface: #0E0E1A;
+  --dark-card:    #13131F;
+  --dark-border:  rgba(255,255,255,0.07);
+  --rose-start:   #F43F5E;
+  --rose-end:     #EC4899;
+  --emerald:      #10D988;
+  --font-playfair: 'Playfair Display', serif;
+  --font-dm-sans:  'DM Sans', sans-serif;
+}
+
+/* ── Gradient text ── */
+.gradient-text {
+  background: linear-gradient(135deg, #F43F5E, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #10D988, #00B4D8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass card ── */
+.glass {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-strong {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+}
+
+/* ── Grain texture overlay ── */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ── Glow effects ── */
+.glow-rose {
+  box-shadow: 0 0 40px rgba(244, 63, 94, 0.15), 0 0 80px rgba(236, 72, 153, 0.08);
+}
+
+/* ── Safe area ── */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Number font ── */
+.font-display {
+  font-family: var(--font-playfair);
+}
+
+/* ── Stagger animation ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.4s ease forwards;
+}
+
+.fade-up-1 { animation-delay: 0.05s; opacity: 0; }
+.fade-up-2 { animation-delay: 0.10s; opacity: 0; }
+.fade-up-3 { animation-delay: 0.15s; opacity: 0; }
+.fade-up-4 { animation-delay: 0.20s; opacity: 0; }
+.fade-up-5 { animation-delay: 0.25s; opacity: 0; }
