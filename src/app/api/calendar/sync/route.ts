@@ -3,6 +3,7 @@ import { google } from 'googleapis'
 import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
+  try {
   const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
@@ -92,4 +93,9 @@ export async function POST(request: NextRequest) {
 
   await supabase.from('calendar_config').update({ last_sync: new Date().toISOString() }).eq('id', config.id)
   return NextResponse.json({ synced, skipped, total: events.length })
+  } catch (err) {
+    console.error('Sync error:', err)
+    const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }
