@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
+  const userId = await getCurrentUserId()
+  if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
   const { month, year } = await request.json()
   const supabase = createServerClient()
 
-  // Busca config do Google Calendar
   const { data: config, error: configError } = await supabase
     .from('calendar_config')
     .select('*')
+    .eq('user_id', userId)
     .limit(1)
     .single()
 
@@ -28,7 +31,6 @@ export async function POST(request: NextRequest) {
     refresh_token: config.refresh_token,
   })
 
-  // Refresh token se necessário
   oauth2Client.on('tokens', async (tokens) => {
     if (tokens.refresh_token || tokens.access_token) {
       await supabase.from('calendar_config').update({
@@ -55,8 +57,12 @@ export async function POST(request: NextRequest) {
 
   const events = eventsRes.data.items || []
 
-  // Busca serviços para fazer o match
-  const { data: services } = await supabase.from('services').select('*').eq('active', true)
+  const { data: services } = await supabase
+    .from('services')
+    .select('*')
+    .eq('active', true)
+    .eq('user_id', userId)
+
   const serviceMap = new Map(services?.map(s => [s.name.toLowerCase(), s]) || [])
 
   let synced = 0
@@ -77,6 +83,7 @@ export async function POST(request: NextRequest) {
     if (!eventDate) continue
 
     const incomeRecord = {
+      user_id: userId,
       calendar_event_id: event.id,
       service_name: eventTitle,
       service_id: service.id,
@@ -87,12 +94,11 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase
       .from('income')
-      .upsert(incomeRecord, { onConflict: 'calendar_event_id' })
+      .upsert(incomeRecord, { onConflict: 'user_id,calendar_event_id' })
 
     if (!error) synced++
   }
 
-  // Atualiza last_sync
   await supabase.from('calendar_config').update({ last_sync: new Date().toISOString() }).eq('id', config.id)
 
   return NextResponse.json({ synced, skipped, total: events.length })

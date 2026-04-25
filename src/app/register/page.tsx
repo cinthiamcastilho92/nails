@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,12 +18,22 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    if (password.length < 6) {
+      setError('A password deve ter pelo menos 6 caracteres')
+      return
+    }
+    if (password !== confirm) {
+      setError('As passwords não coincidem')
+      return
+    }
+
     setLoading(true)
     try {
       const supabase = getSupabaseClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      const { error: authError } = await supabase.auth.signUp({ email, password })
       if (authError) {
-        setError('Email ou password incorretos')
+        setError(authError.message === 'User already registered' ? 'Este email já está registado' : authError.message)
       } else {
         router.push('/')
         router.refresh()
@@ -55,13 +66,13 @@ export default function LoginPage() {
             Nails Finance
           </h1>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            O teu estúdio financeiro
+            Cria a tua conta
           </p>
         </div>
 
         <div className="rounded-3xl p-8 glass">
           <p className="text-xs font-medium mb-6 tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Entrar na conta
+            Nova conta
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,10 +86,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="o-teu@email.com"
                 className="w-full px-4 py-3.5 rounded-xl text-white placeholder:text-white/20 focus:outline-none transition-all text-sm"
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                 autoFocus
                 required
               />
@@ -93,12 +101,9 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Mínimo 6 caracteres"
                   className="w-full px-4 py-3.5 pr-12 rounded-xl text-white placeholder:text-white/20 focus:outline-none transition-all text-sm"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: error ? '1px solid rgba(244,63,94,0.5)' : '1px solid rgba(255,255,255,0.1)',
-                  }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                   required
                 />
                 <button
@@ -110,6 +115,24 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Confirmar password
+              </label>
+              <input
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3.5 rounded-xl text-white placeholder:text-white/20 focus:outline-none transition-all text-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: error ? '1px solid rgba(244,63,94,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                }}
+                required
+              />
 
               {error && (
                 <p className="text-xs mt-2" style={{ color: '#F43F5E' }}>{error}</p>
@@ -118,7 +141,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || !email || !password}
+              disabled={loading || !email || !password || !confirm}
               className="w-full py-3.5 rounded-xl text-white text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-40"
               style={{ background: 'linear-gradient(135deg, #F43F5E, #EC4899)', boxShadow: '0 8px 32px rgba(244,63,94,0.3)' }}
             >
@@ -128,17 +151,17 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                   </svg>
-                  A entrar...
+                  A criar conta...
                 </span>
-              ) : 'Entrar'}
+              ) : 'Criar conta'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          Ainda não tens conta?{' '}
-          <Link href="/register" className="underline" style={{ color: 'rgba(244,63,94,0.7)' }}>
-            Criar conta
+          Já tens conta?{' '}
+          <Link href="/login" className="underline" style={{ color: 'rgba(244,63,94,0.7)' }}>
+            Entrar
           </Link>
         </p>
       </div>

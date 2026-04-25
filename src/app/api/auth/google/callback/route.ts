@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { createServerClient } from '@/lib/supabase/server'
+import { getCurrentUserId } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -8,6 +9,11 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return NextResponse.redirect(new URL('/calendario?error=no_code', request.url))
+  }
+
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   const oauth2Client = new google.auth.OAuth2(
@@ -18,16 +24,21 @@ export async function GET(request: NextRequest) {
 
   const { tokens } = await oauth2Client.getToken(code)
 
-  // Busca o calendário principal
   oauth2Client.setCredentials(tokens)
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
   const calendarList = await calendar.calendarList.list({ minAccessRole: 'owner' })
   const primaryCalendar = calendarList.data.items?.find(c => c.primary) || calendarList.data.items?.[0]
 
   const supabase = createServerClient()
-  const { data: existing } = await supabase.from('calendar_config').select('id').limit(1).single()
+  const { data: existing } = await supabase
+    .from('calendar_config')
+    .select('id')
+    .eq('user_id', userId)
+    .limit(1)
+    .single()
 
   const config = {
+    user_id: userId,
     calendar_id: primaryCalendar?.id || 'primary',
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,

@@ -1,20 +1,39 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { isAuthenticatedFromRequest } from '@/lib/auth'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/google', '/api/auth/google/callback']
+const PUBLIC_PATHS = ['/login', '/register', '/api/auth/google', '/api/auth/google/callback']
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p))
 
-  if (isPublic) return NextResponse.next()
+  let supabaseResponse = NextResponse.next({ request })
 
-  if (!isAuthenticatedFromRequest(request)) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!isPublic && !pathname.startsWith('/api/') && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {
