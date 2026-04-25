@@ -24,5 +24,5 @@ export async function GET(request: NextRequest) {
     state: userId,
   })
 
-  return NextResponse.json({ url })
+  return NextResponse.json({ url, redirectUri })
 }
