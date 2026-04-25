@@ -51,7 +51,7 @@ export default function CalendarioPage() {
       window.history.replaceState({}, '', '/calendario')
     }
     if (params.get('error')) {
-      toast.error('Erro ao ligar o Google Calendar')
+      toast.error(`Erro: ${params.get('error')}`)
       window.history.replaceState({}, '', '/calendario')
     }
   }, [])

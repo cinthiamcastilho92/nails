@@ -43,14 +43,23 @@ export async function GET(request: NextRequest) {
     }
 
     if (existing) {
-      await supabase.from('calendar_config').update(config).eq('id', existing.id)
+      const { error } = await supabase.from('calendar_config').update(config).eq('id', existing.id)
+      if (error) {
+        console.error('Update error:', error)
+        return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
+      }
     } else {
-      await supabase.from('calendar_config').insert(config)
+      const { error } = await supabase.from('calendar_config').insert(config)
+      if (error) {
+        console.error('Insert error:', error)
+        return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
+      }
     }
 
     return NextResponse.redirect(new URL('/calendario?connected=true', request.url))
   } catch (err) {
     console.error('Google callback error:', err)
-    return NextResponse.redirect(new URL('/calendario?error=auth_failed', request.url))
+    const msg = err instanceof Error ? err.message : 'auth_failed'
+    return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(msg)}`, request.url))
   }
 }
