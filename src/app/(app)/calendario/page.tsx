@@ -5,6 +5,7 @@ import { RefreshCw, Link2, CheckCircle2, AlertCircle, Euro, Calendar } from 'luc
 import MonthPicker from '@/components/MonthPicker'
 import { Income } from '@/lib/types'
 import { toast } from 'sonner'
+import { apiFetch } from '@/lib/api'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 
@@ -22,7 +23,7 @@ export default function CalendarioPage() {
   const [connected, setConnected] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch('/api/calendar/status')
+    apiFetch('/api/calendar/status')
       .then(r => r.json())
       .then(d => setConnected(d.connected))
       .catch(() => setConnected(false))
@@ -31,7 +32,7 @@ export default function CalendarioPage() {
   const fetchIncome = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/income?month=${month}&year=${year}`)
+      const res = await apiFetch(`/api/income?month=${month}&year=${year}`)
       const data = await res.json()
       setIncome(Array.isArray(data) ? data : [])
     } catch {
@@ -59,7 +60,7 @@ export default function CalendarioPage() {
   async function handleSync() {
     setSyncing(true)
     try {
-      const res = await fetch('/api/calendar/sync', {
+      const res = await apiFetch('/api/calendar/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ month, year }),

@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
-export async function GET() {
-  const userId = await getCurrentUserId()
+export async function GET(request: NextRequest) {
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ connected: false, last_sync: null })
 
   const supabase = createServerClient()

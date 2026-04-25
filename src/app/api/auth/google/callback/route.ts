@@ -19,41 +19,25 @@ export async function GET(request: NextRequest) {
     )
 
     const { tokens } = await oauth2Client.getToken(code)
-
     oauth2Client.setCredentials(tokens)
+
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
     const calendarList = await calendar.calendarList.list({ minAccessRole: 'owner' })
     const primaryCalendar = calendarList.data.items?.find(c => c.primary) || calendarList.data.items?.[0]
 
     const supabase = createServerClient()
-    const { data: existing } = await supabase
-      .from('calendar_config')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1)
-      .single()
-
-    const config = {
+    const { error } = await supabase.from('calendar_config').upsert({
       user_id: userId,
       calendar_id: primaryCalendar?.id || 'primary',
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
       token_expiry: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
       updated_at: new Date().toISOString(),
-    }
+    }, { onConflict: 'user_id' })
 
-    if (existing) {
-      const { error } = await supabase.from('calendar_config').update(config).eq('id', existing.id)
-      if (error) {
-        console.error('Update error:', error)
-        return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
-      }
-    } else {
-      const { error } = await supabase.from('calendar_config').insert(config)
-      if (error) {
-        console.error('Insert error:', error)
-        return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
-      }
+    if (error) {
+      console.error('Upsert error:', error)
+      return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
     }
 
     return NextResponse.redirect(new URL('/calendario?connected=true', request.url))

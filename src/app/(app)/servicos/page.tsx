@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Check, X, Pencil, Scissors } from 'lucide-react'
 import { Service } from '@/lib/types'
 import { toast } from 'sonner'
+import { apiFetch } from '@/lib/api'
 
 const COLORS = ['#F43F5E','#EC4899','#A855F7','#6366F1','#06B6D4','#10B981','#F59E0B','#EF4444']
 
@@ -19,7 +20,7 @@ function ServiceRow({ service, onSave }: { service: Service; onSave: (s: Service
   async function save() {
     setSaving(true)
     try {
-      const res = await fetch('/api/services', {
+      const res = await apiFetch('/api/services', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: service.id, price: parseFloat(price) }),
@@ -92,7 +93,7 @@ function AddServiceModal({ onAdd, onClose }: { onAdd: (s: Service) => void; onCl
     if (!name.trim() || !price) return
     setSaving(true)
     try {
-      const res = await fetch('/api/services', {
+      const res = await apiFetch('/api/services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), price: parseFloat(price), color }),
@@ -169,7 +170,7 @@ export default function ServicosPage() {
   const [showAdd, setShowAdd] = useState(false)
 
   useEffect(() => {
-    fetch('/api/services').then(r => r.json()).then(setServices).finally(() => setLoading(false))
+    apiFetch('/api/services').then(r => r.json()).then(setServices).finally(() => setLoading(false))
   }, [])
 
   return (

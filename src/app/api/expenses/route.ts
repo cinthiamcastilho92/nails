@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const userId = await getCurrentUserId()
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
@@ -25,14 +25,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getCurrentUserId()
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const formData = await request.formData()
   const supabase = createServerClient()
 
   let receipt_url: string | null = null
-
   const file = formData.get('receipt') as File | null
   if (file && file.size > 0) {
     const bytes = await file.arrayBuffer()
@@ -41,29 +40,27 @@ export async function POST(request: NextRequest) {
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('nails')
       .upload(filename, buffer, { contentType: file.type })
-
     if (!uploadError && uploadData) {
       const { data: urlData } = supabase.storage.from('nails').getPublicUrl(filename)
       receipt_url = urlData.publicUrl
     }
   }
 
-  const expense = {
+  const { data, error } = await supabase.from('expenses').insert({
     user_id: userId,
     date: formData.get('date') as string,
     amount: parseFloat(formData.get('amount') as string),
     category: formData.get('category') as string,
     description: formData.get('description') as string || null,
     receipt_url,
-  }
+  }).select().single()
 
-  const { data, error } = await supabase.from('expenses').insert(expense).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = await getCurrentUserId()
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const { id } = await request.json()

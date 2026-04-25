@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import MonthPicker from '@/components/MonthPicker'
 import { MonthSummary } from '@/lib/types'
 import { toast } from 'sonner'
+import { apiFetch } from '@/lib/api'
 
 function formatEur(v: number) {
   return v.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })
@@ -63,7 +64,7 @@ export default function DashboardPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/dashboard?month=${month}&year=${year}`)
+      const res = await apiFetch(`/api/dashboard?month=${month}&year=${year}`)
       if (!res.ok) throw new Error()
       setData(await res.json())
     } catch {
@@ -76,7 +77,7 @@ export default function DashboardPage() {
   useEffect(() => { fetchData() }, [fetchData])
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    await apiFetch('/api/auth/logout', { method: 'POST' })
     window.location.href = '/login'
   }
 

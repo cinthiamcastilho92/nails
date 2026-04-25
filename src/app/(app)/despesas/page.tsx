@@ -5,6 +5,7 @@ import { Plus, Trash2, Camera, X, ShoppingBag, Home, Wrench, Megaphone, MoreHori
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '@/lib/types'
 import MonthPicker from '@/components/MonthPicker'
 import { toast } from 'sonner'
+import { apiFetch } from '@/lib/api'
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 
@@ -56,7 +57,7 @@ function AddExpenseModal({ onAdd, onClose }: { onAdd: (e: Expense) => void; onCl
       formData.append('category', category)
       formData.append('description', description)
       if (file) formData.append('receipt', file)
-      const res = await fetch('/api/expenses', { method: 'POST', body: formData })
+      const res = await apiFetch('/api/expenses', { method: 'POST', body: formData })
       if (!res.ok) throw new Error()
       onAdd(await res.json())
       toast.success('Despesa guardada')
@@ -180,7 +181,7 @@ export default function DespesasPage() {
   const fetchExpenses = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/expenses?month=${month}&year=${year}`)
+      const res = await apiFetch(`/api/expenses?month=${month}&year=${year}`)
       const data = await res.json()
       setExpenses(Array.isArray(data) ? data : [])
     } catch {
@@ -195,7 +196,7 @@ export default function DespesasPage() {
   async function handleDelete(id: string) {
     setDeleting(id)
     try {
-      const res = await fetch('/api/expenses', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+      const res = await apiFetch('/api/expenses', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
       if (!res.ok) throw new Error()
       setExpenses(prev => prev.filter(e => e.id !== id))
       toast.success('Despesa eliminada')

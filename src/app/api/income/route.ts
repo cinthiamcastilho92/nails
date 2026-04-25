@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const userId = await getCurrentUserId()
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)

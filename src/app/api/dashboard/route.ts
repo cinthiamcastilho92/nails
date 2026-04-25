@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const userId = await getCurrentUserId()
+  const userId = await getCurrentUserId(request)
   if (!userId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
   const income = incomeRes.data || []
   const expenses = expensesRes.data || []
   const services = servicesRes.data || []
-
   const serviceMap = new Map(services.map(s => [s.name, s]))
 
   const totalIncome = income.reduce((sum, i) => sum + Number(i.amount), 0)
@@ -38,7 +37,6 @@ export async function GET(request: NextRequest) {
     existing.count += 1
     incomeByServiceMap.set(item.service_name, existing)
   }
-
   const incomeByService = Array.from(incomeByServiceMap.entries())
     .map(([name, data]) => ({ name, ...data }))
     .sort((a, b) => b.total - a.total)
@@ -62,17 +60,9 @@ export async function GET(request: NextRequest) {
     d.expenses += Number(item.amount)
     dailyMap.set(item.date, d)
   }
-
   const dailyData = Array.from(dailyMap.entries())
     .map(([date, data]) => ({ date, ...data }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  return NextResponse.json({
-    totalIncome,
-    totalExpenses,
-    profit: totalIncome - totalExpenses,
-    incomeByService,
-    expensesByCategory,
-    dailyData,
-  })
+  return NextResponse.json({ totalIncome, totalExpenses, profit: totalIncome - totalExpenses, incomeByService, expensesByCategory, dailyData })
 }
