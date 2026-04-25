@@ -114,9 +114,17 @@ export default function CalendarioPage() {
               <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Liga a tua conta para importar os serviços automaticamente.</p>
               <button
                 onClick={async () => {
-                  const res = await apiFetch('/api/auth/google')
-                  const data = await res.json()
-                  if (data.url) window.location.href = data.url
+                  try {
+                    const res = await apiFetch('/api/auth/google')
+                    const data = await res.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    } else {
+                      toast.error(data.error || 'Erro ao ligar Calendar')
+                    }
+                  } catch {
+                    toast.error('Erro ao iniciar ligação')
+                  }
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-semibold active:scale-95 transition-all"
                 style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)' }}

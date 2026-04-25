@@ -3,19 +3,27 @@ import { google } from 'googleapis'
 import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
+  const origin = new URL(request.url).origin
+  const redirectUri = `${origin}/api/auth/google/callback`
+
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const userId = searchParams.get('state')
+    const errorParam = searchParams.get('error')
+
+    if (errorParam) {
+      return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(errorParam)}`, request.url))
+    }
 
     if (!code || !userId) {
-      return NextResponse.redirect(new URL('/calendario?error=no_code', request.url))
+      return NextResponse.redirect(new URL('/calendario?error=missing_params', request.url))
     }
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      redirectUri
     )
 
     const { tokens } = await oauth2Client.getToken(code)

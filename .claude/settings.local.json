@@ -25,7 +25,9 @@
       "Bash(git push *)",
       "Bash(vercel *)",
       "Bash(npx vercel *)",
-      "mcp__claude_ai_Supabase__execute_sql"
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__get_logs",
+      "Bash(git remote *)"
     ]
   }
 }
