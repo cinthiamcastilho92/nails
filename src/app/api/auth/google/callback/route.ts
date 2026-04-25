@@ -3,16 +3,14 @@ import { google } from 'googleapis'
 import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
-  const redirectUri = `${origin}/api/auth/google/callback`
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+  const redirectUri = `${appUrl}/api/auth/google/callback`
 
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const userId = searchParams.get('state')
     const errorParam = searchParams.get('error')
-
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
 
     if (errorParam) {
       return NextResponse.redirect(`${appUrl}/calendario?error=${encodeURIComponent(errorParam)}`)
@@ -47,15 +45,13 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Upsert error:', error)
-      return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
+      return NextResponse.redirect(`${appUrl}/calendario?error=${encodeURIComponent(error.message)}`)
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
     return NextResponse.redirect(`${appUrl}/calendario?connected=true`)
   } catch (err) {
     console.error('Google callback error:', err)
     const msg = err instanceof Error ? err.message : 'auth_failed'
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
     return NextResponse.redirect(`${appUrl}/calendario?error=${encodeURIComponent(msg)}`)
   }
 }
