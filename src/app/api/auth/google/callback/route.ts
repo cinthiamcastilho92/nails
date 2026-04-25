@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { createServerClient, getCurrentUserId } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
+    const userId = searchParams.get('state')
 
-    if (!code) {
+    if (!code || !userId) {
       return NextResponse.redirect(new URL('/calendario?error=no_code', request.url))
-    }
-
-    const userId = await getCurrentUserId()
-    if (!userId) {
-      return NextResponse.redirect(new URL('/login', request.url))
     }
 
     const oauth2Client = new google.auth.OAuth2(
