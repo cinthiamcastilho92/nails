@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     .select('id, last_sync')
     .eq('user_id', userId)
     .limit(1)
-    .single()
+    .maybeSingle()
 
   return NextResponse.json({ connected: !!data, last_sync: data?.last_sync || null })
 }

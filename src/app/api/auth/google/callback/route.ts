@@ -12,12 +12,14 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('state')
     const errorParam = searchParams.get('error')
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+
     if (errorParam) {
-      return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(errorParam)}`, request.url))
+      return NextResponse.redirect(`${appUrl}/calendario?error=${encodeURIComponent(errorParam)}`)
     }
 
     if (!code || !userId) {
-      return NextResponse.redirect(new URL('/calendario?error=missing_params', request.url))
+      return NextResponse.redirect(`${appUrl}/calendario?error=missing_params`)
     }
 
     const oauth2Client = new google.auth.OAuth2(
@@ -48,10 +50,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(error.message)}`, request.url))
     }
 
-    return NextResponse.redirect(new URL('/calendario?connected=true', request.url))
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+    return NextResponse.redirect(`${appUrl}/calendario?connected=true`)
   } catch (err) {
     console.error('Google callback error:', err)
     const msg = err instanceof Error ? err.message : 'auth_failed'
-    return NextResponse.redirect(new URL(`/calendario?error=${encodeURIComponent(msg)}`, request.url))
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+    return NextResponse.redirect(`${appUrl}/calendario?error=${encodeURIComponent(msg)}`)
   }
 }
