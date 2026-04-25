@@ -22,6 +22,10 @@ DROP POLICY IF EXISTS "Allow all for service role" ON calendar_config;
 DROP POLICY IF EXISTS "Allow all for service role" ON services;
 
 -- 4. New RLS policies — each user sees only their own data
+DROP POLICY IF EXISTS "Users see own income" ON income;
+DROP POLICY IF EXISTS "Users see own expenses" ON expenses;
+DROP POLICY IF EXISTS "Users see own calendar_config" ON calendar_config;
+DROP POLICY IF EXISTS "Users see own services" ON services;
 CREATE POLICY "Users see own income" ON income FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users see own expenses" ON expenses FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users see own calendar_config" ON calendar_config FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
