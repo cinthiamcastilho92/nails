@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { getCurrentUserId } from '@/lib/supabase/server'
 
-export async function GET() {
-  const userId = await getCurrentUserId()
+export async function GET(request: NextRequest) {
+  const userId = await getCurrentUserId(request)
   if (!userId) {
-    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL!))
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
   }
 
   const oauth2Client = new google.auth.OAuth2(
@@ -21,5 +21,5 @@ export async function GET() {
     state: userId,
   })
 
-  return NextResponse.redirect(url)
+  return NextResponse.json({ url })
 }

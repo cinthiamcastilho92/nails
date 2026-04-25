@@ -112,14 +112,18 @@ export default function CalendarioPage() {
             <div className="flex-1">
               <p className="text-sm font-semibold text-white mb-1">Google Calendar não ligado</p>
               <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>Liga a tua conta para importar os serviços automaticamente.</p>
-              <a
-                href="/api/auth/google"
+              <button
+                onClick={async () => {
+                  const res = await apiFetch('/api/auth/google')
+                  const data = await res.json()
+                  if (data.url) window.location.href = data.url
+                }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-semibold active:scale-95 transition-all"
                 style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)' }}
               >
                 <Link2 className="w-3.5 h-3.5" />
                 Ligar Google Calendar
-              </a>
+              </button>
             </div>
           </div>
         </div>
