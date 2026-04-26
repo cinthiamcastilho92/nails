@@ -3,9 +3,7 @@ import { google } from 'googleapis'
 import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const host = request.headers.get('x-forwarded-host') || new URL(request.url).host
-  const proto = request.headers.get('x-forwarded-proto')?.split(',')[0].trim() || 'https'
-  const appUrl = `${proto}://${host}`
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
   const redirectUri = `${appUrl}/api/auth/google/callback`
 
   try {

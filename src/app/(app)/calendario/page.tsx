@@ -118,8 +118,6 @@ export default function CalendarioPage() {
                     const res = await apiFetch('/api/auth/google')
                     const data = await res.json()
                     if (data.url) {
-                      const sentUri = new URL(data.url).searchParams.get('redirect_uri') || '?'
-                      alert(`DEBUG redirect_uri:\n${sentUri}`)
                       window.location.href = data.url
                     } else {
                       toast.error(data.error || 'Erro ao ligar Calendar')

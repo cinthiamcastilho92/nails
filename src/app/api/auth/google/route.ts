@@ -8,9 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
   }
 
-  const host = request.headers.get('x-forwarded-host') || new URL(request.url).host
-  const proto = request.headers.get('x-forwarded-proto')?.split(',')[0].trim() || 'https'
-  const origin = `${proto}://${host}`
+  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
   const redirectUri = `${origin}/api/auth/google/callback`
 
   const oauth2Client = new google.auth.OAuth2(
