@@ -21,6 +21,7 @@ export default function CalendarioPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [connected, setConnected] = useState<boolean | null>(null)
+  const [callbackError, setCallbackError] = useState<string | null>(null)
 
   useEffect(() => {
     apiFetch('/api/calendar/status')
@@ -52,7 +53,7 @@ export default function CalendarioPage() {
       window.history.replaceState({}, '', '/calendario')
     }
     if (params.get('error')) {
-      toast.error(`Erro: ${params.get('error')}`)
+      setCallbackError(params.get('error'))
       window.history.replaceState({}, '', '/calendario')
     }
   }, [])
@@ -103,6 +104,14 @@ export default function CalendarioPage() {
           </button>
         )}
       </div>
+
+      {/* Persistent callback error */}
+      {callbackError && (
+        <div className="rounded-2xl p-4 mb-5 fade-up fade-up-1" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)' }}>
+          <p className="text-xs font-semibold text-white mb-1">Erro ao ligar Google Calendar</p>
+          <p className="text-xs font-mono break-all" style={{ color: 'rgba(255,255,255,0.5)' }}>{callbackError}</p>
+        </div>
+      )}
 
       {/* Connection status */}
       {connected === false && (

@@ -27,16 +27,11 @@ export async function GET(request: NextRequest) {
     )
 
     const { tokens } = await oauth2Client.getToken(code)
-    oauth2Client.setCredentials(tokens)
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
-    const calendarList = await calendar.calendarList.list({ minAccessRole: 'owner' })
-    const primaryCalendar = calendarList.data.items?.find(c => c.primary) || calendarList.data.items?.[0]
 
     const supabase = createServerClient()
     const { error } = await supabase.from('calendar_config').upsert({
       user_id: userId,
-      calendar_id: primaryCalendar?.id || 'primary',
+      calendar_id: 'primary',
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
       token_expiry: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
