@@ -3,7 +3,7 @@ import { google } from 'googleapis'
 import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin
+  const appUrl = new URL(request.url).origin
   const redirectUri = `${appUrl}/api/auth/google/callback`
 
   try {
