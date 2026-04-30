@@ -12,28 +12,96 @@ function formatEur(v: number) {
   return v.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })
 }
 
-function ServiceRow({ service, onSave }: { service: Service; onSave: (s: Service) => void }) {
+function ServiceRow({ service, onSave, onDelete }: { service: Service; onSave: (s: Service) => void; onDelete: (id: string) => void }) {
   const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(service.name)
   const [price, setPrice] = useState(service.price.toString())
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function remove() {
+    if (!confirm(`Apagar "${service.name}"?`)) return
+    setDeleting(true)
+    try {
+      const res = await apiFetch(`/api/services?id=${service.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      onDelete(service.id)
+      toast.success('Serviço apagado')
+    } catch {
+      toast.error('Erro ao apagar')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   async function save() {
+    if (!name.trim()) return
     setSaving(true)
     try {
       const res = await apiFetch('/api/services', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: service.id, price: parseFloat(price) }),
+        body: JSON.stringify({ id: service.id, name: name.trim(), price: parseFloat(price) }),
       })
       if (!res.ok) throw new Error()
       onSave(await res.json())
       setEditing(false)
-      toast.success('Preço atualizado')
+      toast.success('Serviço atualizado')
     } catch {
       toast.error('Erro ao guardar')
     } finally {
       setSaving(false)
     }
+  }
+
+  function cancel() {
+    setEditing(false)
+    setName(service.name)
+    setPrice(service.price.toString())
+  }
+
+  if (editing) {
+    return (
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${service.color}18`, border: `1px solid ${service.color}30` }}>
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: service.color }} />
+          </div>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Nome do serviço"
+            className="flex-1 px-3 py-1.5 text-sm text-white rounded-lg focus:outline-none"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(244,63,94,0.4)' }}
+            autoFocus
+          />
+        </div>
+        <div className="flex items-center gap-2 pl-12">
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>€</span>
+            <input
+              type="number"
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              className="w-full pl-6 pr-2 py-1.5 text-sm text-white rounded-lg focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+              step="0.50" min="0"
+            />
+          </div>
+          <button onClick={save} disabled={saving}
+            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 transition-all shrink-0"
+            style={{ background: '#10D988' }}>
+            <Check className="w-3.5 h-3.5 text-white" />
+          </button>
+          <button onClick={cancel}
+            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 shrink-0"
+            style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <X className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.5)' }} />
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -44,40 +112,19 @@ function ServiceRow({ service, onSave }: { service: Service; onSave: (s: Service
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">{service.name}</p>
       </div>
-      {editing ? (
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>€</span>
-            <input
-              type="number"
-              value={price}
-              onChange={e => setPrice(e.target.value)}
-              className="w-20 pl-6 pr-2 py-1.5 text-sm text-white rounded-lg focus:outline-none"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(244,63,94,0.4)' }}
-              step="0.50" min="0" autoFocus
-            />
-          </div>
-          <button onClick={save} disabled={saving}
-            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 transition-all"
-            style={{ background: '#10D988' }}>
-            <Check className="w-3.5 h-3.5 text-white" />
-          </button>
-          <button onClick={() => { setEditing(false); setPrice(service.price.toString()) }}
-            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.08)' }}>
-            <X className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.5)' }} />
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-white">{formatEur(service.price)}</span>
-          <button onClick={() => setEditing(true)}
-            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
-            <Pencil className="w-3 h-3" />
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-white">{formatEur(service.price)}</span>
+        <button onClick={() => setEditing(true)}
+          className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 transition-all"
+          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}>
+          <Pencil className="w-3 h-3" />
+        </button>
+        <button onClick={remove} disabled={deleting}
+          className="w-7 h-7 rounded-full flex items-center justify-center active:scale-95 transition-all disabled:opacity-40"
+          style={{ background: 'rgba(244,63,94,0.08)', color: 'rgba(244,63,94,0.5)' }}>
+          <X className="w-3 h-3" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -173,6 +220,10 @@ export default function ServicosPage() {
     apiFetch('/api/services').then(r => r.json()).then(setServices).finally(() => setLoading(false))
   }, [])
 
+  function handleDelete(id: string) {
+    setServices(p => p.filter(s => s.id !== id))
+  }
+
   return (
     <div className="px-4 pt-8">
       {/* Header */}
@@ -211,7 +262,7 @@ export default function ServicosPage() {
           </div>
         ) : (
           services.map(s => (
-            <ServiceRow key={s.id} service={s} onSave={u => setServices(p => p.map(x => x.id === u.id ? u : x))} />
+            <ServiceRow key={s.id} service={s} onSave={u => setServices(p => p.map(x => x.id === u.id ? u : x))} onDelete={handleDelete} />
           ))
         )}
       </div>
